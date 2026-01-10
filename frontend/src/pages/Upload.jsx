@@ -1,12 +1,21 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import API from "../services/api";
 import useVideoProgress from "../hooks/useVideoProgress";
+import socket from "../services/socket";
 
 const Upload = () => {
   const [title, setTitle] = useState("");
   const [videoFile, setVideoFile] = useState(null);
   const [videoId, setVideoId] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  // CONNECT SOCKET WHEN PAGE LOADS
+  useEffect(() => {
+    if (!socket.connected) {
+      socket.connect();
+      console.log("Socket connected from Upload page");
+    }
+  }, []);
 
   const { progress, status, sensitivity } = useVideoProgress(videoId);
 
@@ -27,7 +36,9 @@ const Upload = () => {
 
       const res = await API.post("/videos/upload", formData);
 
+      // 🔥 SET videoId IMMEDIATELY (VERY IMPORTANT)
       setVideoId(res.data.video._id);
+
       setTitle("");
       setVideoFile(null);
     } catch (error) {
@@ -65,10 +76,10 @@ const Upload = () => {
         </button>
       </form>
 
-      {/* Progress Section */}
+      {/* 🔥 PROGRESS SECTION */}
       {videoId && (
         <div className="mt-6">
-          <p className="mb-1">Status: {status}</p>
+          <p className="mb-1 font-medium">Status: {status}</p>
 
           <div className="w-full bg-gray-200 rounded h-4 overflow-hidden">
             <div
