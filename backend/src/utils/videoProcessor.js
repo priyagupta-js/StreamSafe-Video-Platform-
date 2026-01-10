@@ -1,4 +1,4 @@
-const Video = require("../models/video");
+const Video = require("../models/Video");
 
 /**
  * Simulate video processing with progress updates
