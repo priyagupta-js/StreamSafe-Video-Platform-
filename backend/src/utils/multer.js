@@ -1,10 +1,12 @@
 const multer = require("multer");
 const path = require("path");
 
-// Storage configuration
+// Absolute upload directory
+const uploadDir = path.join(__dirname, "..", "uploads");
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "src/uploads");
+    cb(null, uploadDir);
   },
 
   filename: (req, file, cb) => {
@@ -13,7 +15,6 @@ const storage = multer.diskStorage({
   }
 });
 
-// File filter (allow only videos)
 const fileFilter = (req, file, cb) => {
   const allowedTypes = ["video/mp4", "video/mkv", "video/avi"];
 
@@ -24,11 +25,10 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-// Multer instance
 const upload = multer({
   storage,
   limits: {
-    fileSize: 100 * 1024 * 1024 // 100MB
+    fileSize: 100 * 1024 * 1024
   },
   fileFilter
 });

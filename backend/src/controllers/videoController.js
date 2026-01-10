@@ -12,7 +12,7 @@ const uploadVideo = async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({
-        message: "No video file uploaded"
+        message: "No video file uploaded",
       });
     }
 
@@ -20,7 +20,7 @@ const uploadVideo = async (req, res) => {
 
     if (!title) {
       return res.status(400).json({
-        message: "Video title is required"
+        message: "Video title is required",
       });
     }
 
@@ -28,13 +28,13 @@ const uploadVideo = async (req, res) => {
     const video = await Video.create({
       title,
       filename: req.file.filename,
-      filepath: req.file.path,
+      filepath: path.resolve(req.file.path),
       mimetype: req.file.mimetype,
       size: req.file.size,
       owner: req.user._id,
       status: "uploaded",
       sensitivity: "pending",
-      progress: 0
+      progress: 0,
     });
 
     // Start video processing asynchronously
@@ -42,12 +42,12 @@ const uploadVideo = async (req, res) => {
 
     res.status(201).json({
       message: "Video uploaded successfully",
-      video
+      video,
     });
   } catch (error) {
     console.error(error);
     res.status(500).json({
-      message: "Error uploading video"
+      message: "Error uploading video",
     });
   }
 };
@@ -57,55 +57,69 @@ const uploadVideo = async (req, res) => {
  * @desc    Stream video using range requests
  * @access  Private (Owner only)
  */
+
+
 const streamVideo = async (req, res) => {
   try {
     const video = await Video.findById(req.params.id);
+
+    console.log("VIDEO FILEPATH:", video.filepath);
+    console.log("FILE EXISTS:", fs.existsSync(video.filepath));
+    console.log("FILE SIZE:", fs.statSync(video.filepath).size);
 
     if (!video) {
       return res.status(404).json({ message: "Video not found" });
     }
 
-    // Ownership check (multi-tenant isolation)
+    // Ownership check
     if (video.owner.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: "Access denied" });
     }
 
-    // Allow streaming only after processing
     if (video.status !== "completed") {
       return res.status(400).json({
-        message: "Video is still processing"
+        message: "Video is still processing",
       });
     }
 
-    const videoPath = path.resolve(video.filepath);
+    const videoPath = video.filepath;
     const videoSize = fs.statSync(videoPath).size;
     const range = req.headers.range;
 
-    if (!range) {
-      return res.status(416).send("Range header required");
+    // CASE 1: Range header exists (browser streaming)
+    if (range) {
+      const CHUNK_SIZE = 10 ** 6; // 1MB
+      const start = Number(range.replace(/\D/g, ""));
+      const end = Math.min(start + CHUNK_SIZE, videoSize - 1);
+
+      const contentLength = end - start + 1;
+
+      const headers = {
+        "Content-Range": `bytes ${start}-${end}/${videoSize}`,
+        "Accept-Ranges": "bytes",
+        "Content-Length": contentLength,
+        "Content-Type": video.mimetype,
+      };
+
+      res.writeHead(206, headers);
+
+      const stream = fs.createReadStream(videoPath, { start, end });
+      stream.pipe(res);
     }
+    // 🔥 CASE 2: No Range header (axios / blob)
+    else {
+      const headers = {
+        "Content-Length": videoSize,
+        "Content-Type": video.mimetype,
+      };
 
-    const CHUNK_SIZE = 10 ** 6; // 1MB
-    const start = Number(range.replace(/\D/g, ""));
-    const end = Math.min(start + CHUNK_SIZE, videoSize - 1);
-
-    const contentLength = end - start + 1;
-
-    const headers = {
-      "Content-Range": `bytes ${start}-${end}/${videoSize}`,
-      "Accept-Ranges": "bytes",
-      "Content-Length": contentLength,
-      "Content-Type": video.mimetype
-    };
-
-    res.writeHead(206, headers);
-
-    const stream = fs.createReadStream(videoPath, { start, end });
-    stream.pipe(res);
+      res.writeHead(200, headers);
+      fs.createReadStream(videoPath).pipe(res);
+    }
   } catch (error) {
     console.error(error);
     res.status(500).json({
-      message: "Error streaming video"
+      message: "Error streaming video",
     });
   }
 };
@@ -120,7 +134,7 @@ const getUserVideos = async (req, res) => {
     const { status, sensitivity } = req.query;
 
     const query = {
-      owner: req.user._id
+      owner: req.user._id,
     };
 
     if (status) query.status = status;
@@ -131,14 +145,13 @@ const getUserVideos = async (req, res) => {
     res.status(200).json(videos);
   } catch (error) {
     res.status(500).json({
-      message: "Error fetching videos"
+      message: "Error fetching videos",
     });
   }
 };
 
-
 module.exports = {
   uploadVideo,
   streamVideo,
-   getUserVideos
+  getUserVideos,
 };
