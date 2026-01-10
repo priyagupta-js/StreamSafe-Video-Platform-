@@ -5,7 +5,9 @@ const connectDB = require("./config/db");
 const { Server } = require("socket.io");
 
 dotenv.config();
-connectDB();
+
+const startServer = async () => {
+  await connectDB();
 
 const PORT = process.env.PORT || 5000;
 
@@ -26,13 +28,16 @@ global.io = io;
 
 // Socket connection
 io.on("connection", (socket) => {
-  console.log("🟢 Client connected:", socket.id);
+  console.log("Client connected:", socket.id);
 
   socket.on("disconnect", () => {
-    console.log("🔴 Client disconnected:", socket.id);
+    console.log("Client disconnected:", socket.id);
   });
 });
 
 server.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
+}
+
+startServer();

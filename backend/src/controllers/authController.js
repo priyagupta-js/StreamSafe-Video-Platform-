@@ -1,4 +1,4 @@
-const User = require("../models/user");
+const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 
 /**
@@ -19,16 +19,18 @@ const registerUser = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
 
-    // Basic validation
     if (!name || !email || !password) {
       return res.status(400).json({
-        message: "Please provide all required fields",
-        error: error.name,
-        errorMessage: error.message
+        message: "Please provide all required fields"
       });
     }
 
-    // Check if user already exists
+    if (password.length < 6) {
+      return res.status(400).json({
+        message: "Password must be at least 6 characters"
+      });
+    }
+
     const userExists = await User.findOne({ email });
     if (userExists) {
       return res.status(400).json({
@@ -36,12 +38,14 @@ const registerUser = async (req, res) => {
       });
     }
 
-    // Create user
+    // ✅ SAFE role handling
     const user = await User.create({
       name,
       email,
       password,
-      role // optional, defaults to viewer
+      role: ["viewer", "editor", "admin"].includes(role)
+        ? role
+        : undefined
     });
 
     res.status(201).json({
@@ -54,11 +58,13 @@ const registerUser = async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({
-      message: "Server error during registration"
+    console.error("REGISTER ERROR 👉", error);
+    res.status(400).json({
+      message: error.message
     });
   }
 };
+
 
 /**
  * @route   POST /api/auth/login
@@ -104,11 +110,12 @@ const loginUser = async (req, res) => {
         role: user.role
       }
     });
-  } catch (error) {
-    res.status(500).json({
-      message: "Server error during login"
-    });
-  }
+  }catch (error) {
+  console.error("LOGIN ERROR", error);
+  res.status(500).json({
+    message: error.message
+  });
+}
 };
 
 module.exports = {
