@@ -3,8 +3,6 @@ const cors = require("cors");
 const authRoutes = require("./routes/authRoutes");
 const videoRoutes = require("./routes/videoRoutes");
 
-
-
 const app = express();
 
 
