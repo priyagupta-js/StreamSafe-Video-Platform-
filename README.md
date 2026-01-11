@@ -2,8 +2,13 @@
 
 ## Overview
 **StreamSafe** is a full-stack web application that allows users to upload videos, process them for content sensitivity, receive real-time progress updates, and stream videos efficiently using HTTP range requests.
+<!---
+## Demo
+# Demo Video: (Add demo video link here)
+# Live Application: (Optional if deployed)
 
-
+---
+-->
 ## The application is designed with a 
 - multi-tenant architecture, 
 - role-based access control, and 
@@ -75,25 +80,7 @@
 - Socket.io
 - Multer
 
-
-## Architecture Overview
-Frontend (React)
-│
-├── Upload UI
-├── Dashboard
-├── Socket.io Client
-│
-Backend (Node.js + Express)
-│
-├── Auth APIs (JWT)
-├── Video APIs
-├── Socket.io Server
-├── Video Processing Logic
-│
-MongoDB Atlas
-├── Users Collection
-└── Videos Collection
----
+  ---
 
 ## Setup Instructions
 
@@ -151,10 +138,3 @@ MongoDB Atlas is used for scalability
 Socket.io enables real-time feedback
 
 Clean separation of concerns is maintained throughout the project
-
-
-## Demo
-
-# Demo Video: (Add demo video link here)
-
-# Live Application: (Optional if deployed)
