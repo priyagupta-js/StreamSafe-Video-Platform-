@@ -1,4 +1,4 @@
-const Video = require("../models/Video");
+const Video = require("../models/video");
 const { processVideo } = require("../utils/videoProcessor");
 const fs = require("fs");
 const path = require("path");

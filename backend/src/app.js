@@ -11,7 +11,10 @@ const app = express();
 /**
  * Global Middlewares
  */
-app.use(cors());
+app.use(cors({
+    origin: process.env.CLIENT_ORIGIN,
+    credentials: true
+  }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
